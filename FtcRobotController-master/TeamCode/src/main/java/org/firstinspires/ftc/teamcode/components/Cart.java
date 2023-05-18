@@ -4,7 +4,7 @@ import android.os.SystemClock;
 
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import org.firstinspires.ftc.teamcode.util;
+import org.firstinspires.ftc.teamcode.util.PIDController;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 public class Cart {
@@ -43,7 +43,7 @@ public class Cart {
         cart = hw.get(DcMotorEx.class, "cart");
         cart.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         cart.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        cart.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        cart.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER); // set to follow vel?
         
         pid = new PIDController(P, I, D);
         pid.setOutputBounds(-MAXIMUM_VELOCITY, MAXIMUM_VELOCITY);
