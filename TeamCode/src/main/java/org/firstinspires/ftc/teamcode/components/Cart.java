@@ -34,6 +34,8 @@ public class Cart {
     public static double I;
     public static double D;
 
+    private TrackingState trackingState;
+
     public Cart(LinearOpMode op)
     {
         this.op = op;
@@ -48,11 +50,26 @@ public class Cart {
         pid = new PIDController(P, I, D);
         pid.setOutputBounds(-MAXIMUM_VELOCITY, MAXIMUM_VELOCITY);
         pid.setInputBounds(MIN_WORKING_THETA, MAX_WORKING_THETA);
+
+        trackingState = velocity;
     }
 
     public void setTarget(double target)
     {
         this.target = target;
+    }
+
+    public void setTrackingState(TrackingState newState)
+    {
+        this.trackingState = newState;
+        if(newState == TrackingState.FOLLOW_POSITION)
+        {
+            cart.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        }
+        else
+        {
+            cart.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        }
     }
 
     public void update()
@@ -67,9 +84,26 @@ public class Cart {
         prevVelocity = velocity;
 
         // TODO: control method
+        switch(trackingState)
+        {
+            case FOLLOW_POSITION:
+            {
+                break;
+            }
+
+            case FOLLOW_VELOCITY:
+            {
+                break;
+            }
+
+            case FOLLOW_ACCELERATION:
+            {
+                break;
+            }
+        }
     }
 
-    private double getPosition()
+    public double getPosition()
     {
         return cartMotor.getCurrentPosition();
     }
@@ -83,4 +117,10 @@ public class Cart {
     {
         return acceleration;
     }
+}
+
+public enum TrackingState {
+    FOLLOW_VELOCITY,
+    FOLLOW_ACCELERATION,
+    FOLLOW_POSITION
 }
