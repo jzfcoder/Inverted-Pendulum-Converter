@@ -4,6 +4,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.components.Cart;
+import org.firstinspires.ftc.teamcode.util.Logger;
 import org.firstinspires.ftc.teamcode.util.TrackingState;
 
 @TeleOp
@@ -12,13 +13,17 @@ public class TrackTester extends LinearOpMode
     @Override
     public void runOpMode()
     {
-        Cart cart = new Cart(this);
+        Logger logger = new Logger(this);
+        Cart cart = new Cart(this, logger);
+
         // + x is to the right
         // 0 deg is down
         // cart start pos in center
         // check max range
 
         waitForStart();
+
+        logger.run();
 
         cart.setTarget(TrackingState.FOLLOW_POSITION, 100);
 

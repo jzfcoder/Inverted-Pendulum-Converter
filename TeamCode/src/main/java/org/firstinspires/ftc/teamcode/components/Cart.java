@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
+import org.firstinspires.ftc.teamcode.util.Logger;
 import org.firstinspires.ftc.teamcode.util.TrackingState;
 
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -33,7 +34,9 @@ public class Cart {
 
     private TrackingState trackingState;
 
-    public Cart(LinearOpMode op)
+    private static Logger logger;
+
+    public Cart(LinearOpMode op, Logger logger)
     {
         this.hw = op.hardwareMap;
 
@@ -43,6 +46,7 @@ public class Cart {
         cart.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER); // set to follow vel?
         
         trackingState = TrackingState.FOLLOW_VELOCITY;
+        this.logger = logger;
     }
 
     public void setTarget(TrackingState newState, double target)
@@ -118,6 +122,8 @@ public class Cart {
             }
         }
     }
+
+    public TrackingState getTrackingState() { return trackingState; }
 
     public double calculateAcceleration() { return acceleration; }
 
