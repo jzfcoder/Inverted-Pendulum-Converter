@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.components;
 
 import android.os.SystemClock;
 
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -13,6 +14,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
  * https://people.ece.cornell.edu/land/courses/ece4760/FinalProjects/s2003/es89kh98/es89kh98/index.htm
  */
 
+@SuppressWarnings({"FieldCanBeLocal", "FieldMayBeFinal", "unused"})
 public class Pendulum {
 
     private LinearOpMode op;
@@ -51,7 +53,7 @@ public class Pendulum {
         curFrameTime = SystemClock.elapsedRealtime();
         delta = curFrameTime - prevFrameTime;
 
-        omega = calculateVelocity();
+        omega = getOmega();
         alpha = (omega - prevOmega) / delta;
 
         prevFrameTime = curFrameTime;
@@ -63,14 +65,14 @@ public class Pendulum {
         return encoder.getCurrentPosition();
     }
 
-    public int getVelocityTicks()
+    public double getVelocityTicks()
     {
-        return encoder.getCurrentVelocity();
+        return encoder.getVelocity();
     }
 
     public double getTheta()
     {
-        return (getPositionTicks() / TICKS_PER_REV) * 2 * Math.PI;
+        return ((double) getPositionTicks() / TICKS_PER_REV) * 2 * Math.PI;
     }
 
     public double getOmega()

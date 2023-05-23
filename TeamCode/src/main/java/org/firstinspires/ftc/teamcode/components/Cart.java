@@ -2,16 +2,20 @@ package org.firstinspires.ftc.teamcode.components;
 
 import android.os.SystemClock;
 
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import org.firstinspires.ftc.teamcode.util.PIDController;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
+@SuppressWarnings({"FieldCanBeLocal", "FieldMayBeFinal", "unused"})
 public class Cart {
 
     private LinearOpMode op;
     private HardwareMap hw;
-    private DcMotorEx cartMotor;
+    private DcMotorEx cart;
+
+    public static int maxVelocity = 3000;
 
     private double curFrameTime;
     private double prevFrameTime;
@@ -22,17 +26,9 @@ public class Cart {
     private double prevVelocity;
     private double acceleration;
 
-    private double target;
-
-    private PIDController pid;
-
-    private final int MAXIMUM_VELOCITY = 100;
-    private final double MIN_WORKING_THETA;
-    private final double MAX_WORKING_THETA;
-
-    public static double P;
-    public static double I;
-    public static double D;
+    private double targetPosition;
+    private double targetVelocity;
+    private double targetAcceleration;
 
     private TrackingState trackingState;
 
@@ -40,36 +36,51 @@ public class Cart {
     {
         this.op = op;
         this.hw = op.hardwareMap;
-        this.cartMotor = op;
 
         cart = hw.get(DcMotorEx.class, "cart");
-        cart.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        cart.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        cart.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER); // set to follow vel?
+        cart.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+        cart.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+        cart.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER); // set to follow vel?
         
-        pid = new PIDController(P, I, D);
-        pid.setOutputBounds(-MAXIMUM_VELOCITY, MAXIMUM_VELOCITY);
-        pid.setInputBounds(MIN_WORKING_THETA, MAX_WORKING_THETA);
-
-        trackingState = velocity;
+        trackingState = TrackingState.FOLLOW_VELOCITY;
     }
 
-    public void setTarget(double target)
-    {
-        this.target = target;
-    }
-
-    public void setTrackingState(TrackingState newState)
+    public void setTarget(TrackingState newState, double target)
     {
         this.trackingState = newState;
-        if(newState == TrackingState.FOLLOW_POSITION)
-        {
-            cart.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        switch(trackingState) {
+            case FOLLOW_POSITION:
+                {
+                    cart.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+                    targetPosition = target;
+                }
+                break;
+
+            case FOLLOW_VELOCITY:
+                {
+                    cart.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+                    targetVelocity = target;
+                }
+                break;
+
+            case FOLLOW_ACCELERATION:
+                {
+                    cart.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                    targetAcceleration = target;
+                    targetVelocity = calculateVelocity();
+                }
+                break;
         }
-        else
-        {
-            cart.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        }
+    }
+
+    public void updateTargetVelocity(double vel)
+    {
+        this.targetVelocity = vel;
+    }
+
+    public void updateTargetAcceleration(double a)
+    {
+        this.targetAcceleration = a;
     }
 
     public void update()
@@ -88,16 +99,21 @@ public class Cart {
         {
             case FOLLOW_POSITION:
             {
+                cart.setTargetPosition((int) targetPosition);
+                cart.setPower(1);
                 break;
             }
 
             case FOLLOW_VELOCITY:
             {
+                cart.setPower(targetVelocity);
                 break;
             }
 
             case FOLLOW_ACCELERATION:
             {
+                cart.setPower(Math.min(targetVelocity, maxVelocity));
+                targetVelocity = targetVelocity + (delta * targetAcceleration);
                 break;
             }
         }
@@ -105,22 +121,11 @@ public class Cart {
 
     public double getPosition()
     {
-        return cartMotor.getCurrentPosition();
+        return cart.getCurrentPosition();
     }
     
-    private double calculateVelocity()
+    public double calculateVelocity()
     {
-        return cartMotor.getCurrentVelocity();
+        return cart.getVelocity();
     }
-
-    private double calculateAcceleration()
-    {
-        return acceleration;
-    }
-}
-
-public enum TrackingState {
-    FOLLOW_VELOCITY,
-    FOLLOW_ACCELERATION,
-    FOLLOW_POSITION
 }

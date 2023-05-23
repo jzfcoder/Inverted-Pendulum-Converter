@@ -1,9 +1,17 @@
 package org.firstinspires.ftc.teamcode.opmodes;
 
+import static org.firstinspires.ftc.teamcode.opmodes.State.*;
+
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+
 import org.firstinspires.ftc.teamcode.components.Pendulum;
 import org.firstinspires.ftc.teamcode.components.Cart;
+import org.firstinspires.ftc.teamcode.components.TrackingState;
+import org.firstinspires.ftc.teamcode.util.PIDController;
 
+@SuppressWarnings({"FieldCanBeLocal", "unused"})
+@TeleOp
 public class Balance extends LinearOpMode
 {
 
@@ -13,7 +21,7 @@ public class Balance extends LinearOpMode
     private final double LENGTH_TO_PENDULUM_COM = 0.3; // m
     private final double MOMENT_OF_INERTIA = 0.006; // kg * m ^ 2
     private final double ENERGY_LOSS_CONSTANT = 4;
-    private final int REQUIRED_TANGENTIAL_VELOCITY = 2 * Math.sqrt(9.81 * LENGTH_TO_PENDULUM_COM);
+    private final double REQUIRED_TANGENTIAL_VELOCITY = 2 * Math.sqrt(9.81 * LENGTH_TO_PENDULUM_COM);
 
     private double force; // N
     private int cartPos; // m
@@ -22,7 +30,20 @@ public class Balance extends LinearOpMode
     public static double topThreshold = Math.toRadians(135);
     public static double bottomThreshold = -topThreshold;
 
-    private State state = WAIT;
+    public static double maxVel = 1;
+    public static double minVel = -1;
+
+    // TODO:
+    public static double farRight = 100;
+    public static double farLeft = -farRight;
+
+    // TODO:
+    public static double P = 0.08;
+    public static double I = 0.01;
+    public static double D = 0;
+
+    private State state = LEFT_INITIAL;
+    private PIDController pid;
 
     @Override
     public void runOpMode()
@@ -30,42 +51,41 @@ public class Balance extends LinearOpMode
         Cart cart = new Cart(this);
         Pendulum pendulum = new Pendulum(this);
 
-        double currentVelocity = 0;
+        pid = new PIDController(P, I, D);
+        pid.setInputBounds(false, bottomThreshold, topThreshold);
+        pid.setOutputBounds(minVel, maxVel);
+
+        double currentVelocity;
+        int cartSwitch;
 
         waitForStart();
 
+        cart.setTarget(TrackingState.FOLLOW_ACCELERATION, 1);
+        cartSwitch = (int) (cart.getPosition()) + (int) ((farLeft - (int) cart.getPosition()) / 2);
+
         while(opModeIsActive())
         {
-            if(gamepad1.b)
-            {
-                state = WAIT;
-            }
+            cart.update();
+            pendulum.update();
             switch(state)
             {
-                case WAIT:
-                {
-                    if(gamepad1.a)
-                    {
-                        state = INITIAL;
-                    }
-                    break;
-                }
-
                 case LEFT_INITIAL:
                 {
                     // cart set follow accel
-                    currentVelocity = LENGTH_TO_PENDULUM_COM * LENGTH_TO_PENDULUM_COM;
+                    if(cart.getPosition() < cartSwitch)
+                    {
+                        cart.updateTargetAcceleration(1);
+                    }
+
+                    currentVelocity = cart.calculateVelocity() * LENGTH_TO_PENDULUM_COM;
                     if(Math.abs(currentVelocity) == REQUIRED_TANGENTIAL_VELOCITY + ENERGY_LOSS_CONSTANT)
                     {
                         state = FLIP;
                     }
-                    else if(Math.abs(currentVelocity) < 0.1)
+                    else if(cart.getPosition() > farRight || cart.getPosition() < farLeft || Math.abs(currentVelocity) < 0.1)
                     {
-                        state = RIGHT_INITIAL;
-                    }
-                    // TODO: SET CONSTANTS
-                    else if(cart.getPosition() > 100 || cart.getPosition < 0)
-                    {
+                        cart.setTarget(TrackingState.FOLLOW_ACCELERATION, 1);
+                        cartSwitch = (int) (cart.getPosition()) + (int) ((farRight - (int) cart.getPosition()) / 2);
                         state = RIGHT_INITIAL;
                     }
                     break;
@@ -74,18 +94,20 @@ public class Balance extends LinearOpMode
                 case RIGHT_INITIAL:
                 {
                     // cart set follow accel
-                    currentVelocity = LENGTH_TO_PENDULUM_COM * LENGTH_TO_PENDULUM_COM;
+                    if(cart.getPosition() > cartSwitch)
+                    {
+                        cart.updateTargetAcceleration(-1);
+                    }
+
+                    currentVelocity = cart.calculateVelocity() * LENGTH_TO_PENDULUM_COM;
                     if(Math.abs(currentVelocity) == REQUIRED_TANGENTIAL_VELOCITY + ENERGY_LOSS_CONSTANT)
                     {
                         state = FLIP;
                     }
-                    else if(Math.abs(currentVelocity) < 0.1)
+                    else if(cart.getPosition() > farRight || cart.getPosition() < farLeft || Math.abs(currentVelocity) < 0.1)
                     {
-                        state = LEFT_INITIAL;
-                    }
-                    // TODO: SET CONSTANTS
-                    else if(cart.getPosition() > 100 || cart.getPosition < 0)
-                    {
+                        cart.setTarget(TrackingState.FOLLOW_ACCELERATION, 1);
+                        cartSwitch = (int) (cart.getPosition()) + (int) ((farLeft - (int) cart.getPosition()) / 2);
                         state = LEFT_INITIAL;
                     }
                     break;
@@ -93,9 +115,11 @@ public class Balance extends LinearOpMode
 
                 case BRAKE:
                 {
+                    cart.setTarget(TrackingState.FOLLOW_POSITION, cart.getPosition());
                     if(pendulum.getTheta() > bottomThreshold && pendulum.getTheta() < topThreshold)
                     {
                         state = BALANCE;
+                        cart.setTarget(TrackingState.FOLLOW_VELOCITY, 0);
                     }
                     break;
                 }
@@ -108,6 +132,7 @@ public class Balance extends LinearOpMode
                 
                 case BALANCE:
                 {
+                    cart.updateTargetVelocity(pid.calculateCorrection(Math.toRadians(180) - pendulum.getTheta()));
                     break;
                 }
             }
@@ -115,10 +140,3 @@ public class Balance extends LinearOpMode
     }
 }
 
-private enum State {
-    WAIT,
-    INITIAL,
-    BRAKE,
-    FLIP,
-    BALANCE,
-}
