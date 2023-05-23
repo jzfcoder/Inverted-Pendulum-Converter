@@ -1,31 +1,24 @@
 package org.firstinspires.ftc.teamcode.opmodes;
 
-import static org.firstinspires.ftc.teamcode.opmodes.State.*;
+import static org.firstinspires.ftc.teamcode.util.State.*;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.components.Pendulum;
 import org.firstinspires.ftc.teamcode.components.Cart;
-import org.firstinspires.ftc.teamcode.components.TrackingState;
+import org.firstinspires.ftc.teamcode.util.TrackingState;
 import org.firstinspires.ftc.teamcode.util.PIDController;
+import org.firstinspires.ftc.teamcode.util.State;
 
-@SuppressWarnings({"FieldCanBeLocal", "unused"})
+@SuppressWarnings({"FieldCanBeLocal"})
 @TeleOp
 public class Balance extends LinearOpMode
 {
 
-    private final double CART_MASS = 1.0; // kg
-    private final double PENDULUM_MASS = 1.0; // kg
-    private final double COEFFICIENT_OF_FRICTION_FOR_CART = 0.1; // N*m / sec
     private final double LENGTH_TO_PENDULUM_COM = 0.3; // m
-    private final double MOMENT_OF_INERTIA = 0.006; // kg * m ^ 2
     private final double ENERGY_LOSS_CONSTANT = 4;
     private final double REQUIRED_TANGENTIAL_VELOCITY = 2 * Math.sqrt(9.81 * LENGTH_TO_PENDULUM_COM);
-
-    private double force; // N
-    private int cartPos; // m
-    private double theta; // rad (0 is down)
 
     public static double topThreshold = Math.toRadians(135);
     public static double bottomThreshold = -topThreshold;

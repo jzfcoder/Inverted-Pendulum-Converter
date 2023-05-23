@@ -5,23 +5,24 @@ import android.os.SystemClock;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import org.firstinspires.ftc.teamcode.util.PIDController;
+
+import org.firstinspires.ftc.teamcode.util.TrackingState;
+
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
-@SuppressWarnings({"FieldCanBeLocal", "FieldMayBeFinal", "unused"})
+@SuppressWarnings({"FieldCanBeLocal", "FieldMayBeFinal"})
 public class Cart {
 
-    private LinearOpMode op;
     private HardwareMap hw;
     private DcMotorEx cart;
 
     public static int maxVelocity = 3000;
+    public static int minVelocity = -maxVelocity;
 
     private double curFrameTime;
     private double prevFrameTime;
     private double delta;
 
-    private double position;
     private double velocity;
     private double prevVelocity;
     private double acceleration;
@@ -34,7 +35,6 @@ public class Cart {
 
     public Cart(LinearOpMode op)
     {
-        this.op = op;
         this.hw = op.hardwareMap;
 
         cart = hw.get(DcMotorEx.class, "cart");
@@ -112,12 +112,14 @@ public class Cart {
 
             case FOLLOW_ACCELERATION:
             {
-                cart.setPower(Math.min(targetVelocity, maxVelocity));
+                cart.setPower(targetVelocity < 0 ? Math.max(targetVelocity, minVelocity) : Math.min(targetVelocity, maxVelocity));
                 targetVelocity = targetVelocity + (delta * targetAcceleration);
                 break;
             }
         }
     }
+
+    public double calculateAcceleration() { return acceleration; }
 
     public double getPosition()
     {
