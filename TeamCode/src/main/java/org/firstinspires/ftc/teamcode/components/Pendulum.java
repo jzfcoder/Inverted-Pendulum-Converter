@@ -72,7 +72,8 @@ public class Pendulum {
 
     public double getTheta()
     {
-        return ((double) getPositionTicks() / TICKS_PER_REV) * 2 * Math.PI;
+        double angle = (((double) getPositionTicks() / TICKS_PER_REV) * 2 * Math.PI) % (2 * Math.PI);
+        return angle < Math.toRadians(-180) ? Math.toRadians(360) + angle : angle > Math.toRadians(180) ? angle - Math.toRadians(360): angle;
     }
 
     public double getOmega()

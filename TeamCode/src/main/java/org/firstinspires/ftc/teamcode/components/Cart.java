@@ -9,6 +9,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import org.firstinspires.ftc.teamcode.util.Logger;
 import org.firstinspires.ftc.teamcode.util.TrackingState;
 
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 @SuppressWarnings({"FieldCanBeLocal", "FieldMayBeFinal"})
@@ -44,9 +45,23 @@ public class Cart {
         cart.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
         cart.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         cart.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER); // set to follow vel?
+        cart.setDirection(DcMotorEx.Direction.REVERSE);
         
         trackingState = TrackingState.FOLLOW_VELOCITY;
         this.logger = logger;
+    }
+
+    public Cart(LinearOpMode op)
+    {
+        this.hw = op.hardwareMap;
+
+        cart = hw.get(DcMotorEx.class, "cart");
+        cart.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+        cart.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+        cart.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER); // set to follow vel?
+        cart.setDirection(DcMotorEx.Direction.REVERSE);
+
+        trackingState = TrackingState.FOLLOW_VELOCITY;
     }
 
     public void setTarget(TrackingState newState, double target)
@@ -55,8 +70,9 @@ public class Cart {
         switch(trackingState) {
             case FOLLOW_POSITION:
                 {
-                    cart.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
                     targetPosition = target;
+                    cart.setTargetPosition((int) targetPosition);
+                    cart.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
                 }
                 break;
 
@@ -75,6 +91,7 @@ public class Cart {
                 }
                 break;
         }
+
     }
 
     public void updateTargetVelocity(double vel)
@@ -87,8 +104,24 @@ public class Cart {
         this.targetAcceleration = a;
     }
 
+    public void zero()
+    {
+        DcMotor.RunMode mode = cart.getMode();
+        cart.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        cart.setMode(mode);
+    }
+
     public void update()
     {
+        if(cart.getCurrentPosition() > 17 && (targetPosition > 17 || targetVelocity > 0))
+        {
+            return;
+        }
+        if(cart.getCurrentPosition() < -17 && (targetPosition < 17 || targetVelocity < 0))
+        {
+            return;
+        }
+
         curFrameTime = SystemClock.elapsedRealtime();
         delta = curFrameTime - prevFrameTime;
 

@@ -13,59 +13,64 @@ public class TrackTester extends LinearOpMode
     @Override
     public void runOpMode()
     {
-        Logger logger = new Logger(this);
-        Cart cart = new Cart(this, logger);
+        Cart cart = new Cart(this);
 
         // + x is to the right
         // 0 deg is down
         // cart start pos in center
         // check max range
 
+        telemetry.addData("init", "finished");
+        telemetry.update();
+
         waitForStart();
 
-        logger.run();
+        cart.setTarget(TrackingState.FOLLOW_VELOCITY, 1);
 
-        cart.setTarget(TrackingState.FOLLOW_POSITION, 100);
-
-        while(cart.getPosition() < 100)
+        while(opModeIsActive())
         {
-            cart.update();
+            telemetry.addData("position", cart.getPosition());
+            telemetry.update();
         }
 
-        cart.setTarget(TrackingState.FOLLOW_VELOCITY, -100);
-
-        while(Math.abs(cart.calculateVelocity()) < 100)
-        {
-            cart.update();
-        }
-
-        cart.setTarget(TrackingState.FOLLOW_POSITION, 0);
-
-        while(cart.getPosition() < 0)
-        {
-            cart.update();
-        }
-
-        cart.setTarget(TrackingState.FOLLOW_VELOCITY, 100);
-
-        while(Math.abs(cart.calculateVelocity()) < 100)
-        {
-            cart.update();
-        }
-
-        cart.setTarget(TrackingState.FOLLOW_ACCELERATION, -10);
-
-        while(Math.abs(cart.calculateVelocity()) > 0)
-        {
-            cart.update();
-        }
-
-        cart.setTarget(TrackingState.FOLLOW_POSITION, 0);
-
-        while(cart.getPosition() > 0)
-        {
-            cart.update();
-        }
+//
+//        int max = 0;
+//
+//        while(cart.getPosition() < 35 && opModeIsActive())
+//        {
+//            if(cart.calculateVelocity() > max) { max = (int) cart.calculateVelocity(); }
+//            telemetry.addData("cart max vel", max);
+//            telemetry.update();
+//            cart.update();
+//        }
+//
+//        cart.setTarget(TrackingState.FOLLOW_POSITION, 0);
+//
+//        while(cart.getPosition() < 0)
+//        {
+//            cart.update();
+//        }
+//
+//        cart.setTarget(TrackingState.FOLLOW_VELOCITY, 100);
+//
+//        while(Math.abs(cart.calculateVelocity()) < 100)
+//        {
+//            cart.update();
+//        }
+//
+//        cart.setTarget(TrackingState.FOLLOW_ACCELERATION, -10);
+//
+//        while(Math.abs(cart.calculateVelocity()) > 0)
+//        {
+//            cart.update();
+//        }
+//
+//        cart.setTarget(TrackingState.FOLLOW_POSITION, 0);
+//
+//        while(cart.getPosition() > 0)
+//        {
+//            cart.update();
+//        }
     }
 }
 
